@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   ArgumentsHost,
   Catch,
@@ -19,22 +20,31 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     // Handle Route Not Found
     if (exception instanceof NotFoundException) {
+      const exceptionResponse = exception.getResponse();
+
+      const message =
+        typeof exceptionResponse === 'string'
+          ? exceptionResponse
+          : exceptionResponse['message'];
+
+      // Route not found
+      if (typeof message === 'string' && message.startsWith('Cannot ')) {
+        return response.status(HttpStatus.NOT_FOUND).json({
+          success: false,
+          message: 'Route Not Found',
+          error: {
+            path: request.originalUrl,
+            method: request.method,
+          },
+        });
+      }
+
+      // Normal NotFoundException from service
       return response.status(HttpStatus.NOT_FOUND).json({
         success: false,
-        message: 'Route Not Found',
-        error: {
-          path: request.originalUrl,
-          method: request.method,
-        },
+        message,
       });
     }
-
-    // response.status(status).json({
-    //   statusCode: status,
-    //   timestamp: new Date().toISOString(),
-    //   path: request.url,
-    //   message: exception.message,
-    // });
 
     if (exception instanceof HttpException) {
       return response.status(exception.getStatus()).json(exceptionResponse);
