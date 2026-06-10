@@ -36,6 +36,7 @@ export class UserService {
     return users;
   }
 
+  //findUserById
   async findUserById(id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
@@ -45,6 +46,27 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    return user;
+  }
+
+  //delete user
+  async deleteUser(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    //delete user
+    await this.prisma.user.delete({
+      where: {
+        id,
+      },
+    });
+
     return user;
   }
 }
